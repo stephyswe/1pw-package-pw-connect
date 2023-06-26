@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@1password/connect": "*",
+    "dotenv": "^16.3.1",
+    "readline-sync": "*"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "type": "module"
+}
