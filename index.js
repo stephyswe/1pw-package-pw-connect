@@ -4,24 +4,65 @@ import * as dotenv from "dotenv";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import { parse } from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config({ path: resolve(__dirname, "./.env.local") });
 
-async function RunOnce({ envTitle }) {
+const op = OnePasswordConnect({
+  serverURL: process.env.OP_CONNECT_HOST,
+  token: process.env.OP_CONNECT_TOKEN,
+  keepAlive: true,
+});
+
+export const createItemFromEnvFile = async ({ filePath }) => {
+  try {
+    const env = parse(await fs.promises.readFile(filePath, "utf8"));
+
+    const objToArr = (obj) => {
+      return Object.entries(obj).map(([key, value]) => `${key}=${value}`);
+    };
+
+    const obj = objToArr(env);
+
+    // CREATE ITEM
+    const newItem = new ItemBuilder()
+      .setTitle("TEST_ONE_3")
+      .addField({ value: obj[0], type: "STRING" })
+      .addField({ value: obj[1], type: "STRING" })
+      .setCategory("API_CREDENTIAL")
+      .build();
+
+    console.log(steps["step2"], newItem);
+
+    // ADD ITEM TO VAULT
+    const createdItem = await op.createItem(
+      "ve7tntitvzl7vsglbtmtjttcaa",
+      newItem
+    );
+
+    console.log(steps["step3"], createdItem);
+
+    return { hello: "world" };
+  } catch (error) {
+    console.log("error", error);
+  }
+
+  /* const fieldAssignments = Object.entries(env)
+    .filter(([key, value]) => Boolean(key && value && /^[\dA-Z_]+$/.test(key)))
+    .map(([key, value]) => [key, "concealed", value]);
+
+  return op.item.create(fieldAssignments, { vault, title, account, category }); */
+};
+
+async function getEnvVaultByTitle({ envTitle }) {
   try {
     // CREATE CLIENT
-    const op = OnePasswordConnect({
-      serverURL: process.env.OP_CONNECT_HOST,
-      token: process.env.OP_CONNECT_TOKEN,
-      keepAlive: true,
-    });
 
     // Get all vaults
     let allVaults = await op.listVaults();
-    console.log("allVaults", allVaults);
 
     // How to get one vault id
     let vaultId = allVaults[0].id;
@@ -32,16 +73,10 @@ async function RunOnce({ envTitle }) {
     const item = await op.getItem(vaultId, envTitle ?? "dev_item");
     // console.log("item", item.fields);
     const notesEnv = item.fields[0].value;
-    console.log(item.fields[0].value); // Outputs: 'dev_item'
-    console.log(item.fields[1].value); // Outputs: 'dev_item'
-    console.log(item.fields[2].value); // Outputs: '123'
-    // console.log(item.fields.find((field) => field.id === "credential")?.value);
 
     // create .env.1pw file
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-
-    console.log("__dirname", __dirname);
 
     const pathToEnvFile = resolve(__dirname, "../../.env.1pw");
 
@@ -57,14 +92,6 @@ async function RunOnce({ envTitle }) {
     console.log("error", error);
   }
 }
-
-async function main({ envTitle }) {
-  console.log("main envTitle", envTitle);
-  const dataRun = await RunOnce({ envTitle });
-  return dataRun;
-}
-
-main();
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -139,4 +166,4 @@ async function runAll() {
 }
 
 // At the end of the file
-export { main };
+export { getEnvVaultByTitle };
