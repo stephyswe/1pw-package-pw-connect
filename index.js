@@ -3,13 +3,14 @@ import * as readline from "readline-sync";
 import * as dotenv from "dotenv";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-dotenv.config({ path: resolve(__dirname, "./.env") });
+dotenv.config({ path: resolve(__dirname, "./.env.local") });
 
-async function RunOnce() {
+async function RunOnce({ envTitle }) {
   try {
     // CREATE CLIENT
     const op = OnePasswordConnect({
@@ -20,7 +21,7 @@ async function RunOnce() {
 
     // Get all vaults
     let allVaults = await op.listVaults();
-    // console.log("allVaults", allVaults);
+    console.log("allVaults", allVaults);
 
     // How to get one vault id
     let vaultId = allVaults[0].id;
@@ -28,24 +29,39 @@ async function RunOnce() {
     let vault = await op.getVault("ve7tntitvzl7vsglbtmtjttcaa");
 
     // get one vault item
-    const item = await op.getItem(vaultId, "dev_item");
+    const item = await op.getItem(vaultId, envTitle ?? "dev_item");
+    // console.log("item", item.fields);
+    const notesEnv = item.fields[0].value;
+    console.log(item.fields[0].value); // Outputs: 'dev_item'
+    console.log(item.fields[1].value); // Outputs: 'dev_item'
     console.log(item.fields[2].value); // Outputs: '123'
     // console.log(item.fields.find((field) => field.id === "credential")?.value);
 
     // create .env.1pw file
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
 
-    const pathToEnvFile = path.resolve(__dirname, "../.env.1pw");
+    console.log("__dirname", __dirname);
 
-    
+    const pathToEnvFile = resolve(__dirname, "../../.env.1pw");
 
+    const data = "ENV=123\nENV2=145";
+
+    fs.writeFileSync(pathToEnvFile, data);
+
+    // console.log(pathToEnvFile);
+    // const pathToEnvFile = path.resolve(__dirname, "../.env.1pw");
+
+    return notesEnv;
   } catch (error) {
     console.log("error", error);
   }
 }
 
-async function main() {
-  await RunOnce();
-  console.log("finished");
+async function main({ envTitle }) {
+  console.log("main envTitle", envTitle);
+  const dataRun = await RunOnce({ envTitle });
+  return dataRun;
 }
 
 main();
@@ -121,3 +137,6 @@ async function runAll() {
 
   console.log(steps["outro"]);
 }
+
+// At the end of the file
+export { main };
