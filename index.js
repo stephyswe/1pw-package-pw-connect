@@ -67,10 +67,13 @@ async function getEnvVaultByTitle({ envTitle }) {
     // How to get one vault id
     let vaultId = allVaults[0].id;
     // console.log("vaultId", vaultId);
-    let vault = await op.getVault("ve7tntitvzl7vsglbtmtjttcaa");
+    let vault = await op.getVault(process.env.OP_VAULT);
 
     // get one vault item
-    const item = await op.getItem(vaultId, envTitle ?? "dev_item");
+    const item = await op.getItem(
+      vaultId,
+      envTitle === "" ? "dev_item" : envTitle
+    );
     // console.log("item", item.fields);
     const notesEnv = item.fields[0].value;
 
@@ -78,7 +81,7 @@ async function getEnvVaultByTitle({ envTitle }) {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
 
-    const pathToEnvFile = resolve(__dirname, "../../.env.1pw");
+    const pathToEnvFile = resolve(__dirname, "./.env.1pw");
 
     const data = "ENV=123\nENV2=145";
 
