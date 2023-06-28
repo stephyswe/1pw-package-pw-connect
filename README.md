@@ -1,3 +1,8 @@
+# Start
+docker compose up
+- Starts on http://localhost:8080/v1/vaults
+
+
 # Build the Docker Image:
 docker build -t your-app-name .
 
